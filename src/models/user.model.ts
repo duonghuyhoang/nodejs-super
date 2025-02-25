@@ -4,7 +4,8 @@ export interface IUser extends Document {
   name: string
   email: string
   password: string
-  role: 'user' | 'admin'
+  refreshToken?: string
+  dayOfBirth: Date
   createdAt?: Date
   updatedAt?: Date
 }
@@ -25,9 +26,9 @@ const UserSchema = new Schema<IUser>(
       type: String,
       required: [true, 'Password is required']
     },
-    role: {
-      type: String,
-      enum: ['user', 'admin']
+    dayOfBirth: {
+      type: Date,
+      required: [true, 'Day of birth is required']
     }
   },
   {
