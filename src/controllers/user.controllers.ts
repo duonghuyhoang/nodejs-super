@@ -1,6 +1,14 @@
 import { Request, Response } from 'express'
 import { IRegisterReqBodyUser } from '~/types/user.types'
-import { loginUser, refreshTokenService, registerUser, getProfile, follow, unFollow } from '~/services/user.service'
+import {
+  loginUser,
+  refreshTokenService,
+  registerUser,
+  getProfile,
+  follow,
+  unFollow,
+  oauth
+} from '~/services/user.service'
 import _ from 'lodash'
 
 export const registerController = async (req: Request<any, any, IRegisterReqBodyUser>, res: Response) => {
@@ -20,6 +28,16 @@ export const loginController = async (req: Request, res: Response) => {
     const { email, password } = bodyPayload
     const { user, access_token } = await loginUser(email, password, res)
 
+    return res.status(200).json({ data: { user, access_token } })
+  } catch (error: any) {
+    return res.status(error.status || 400).json({ message: error.message })
+  }
+}
+
+export const oauthController = async (req: Request, res: Response) => {
+  try {
+    const { code } = req.query
+    await oauth(code as string)
     return res.status(200).json({ data: { user, access_token } })
   } catch (error: any) {
     return res.status(error.status || 400).json({ message: error.message })

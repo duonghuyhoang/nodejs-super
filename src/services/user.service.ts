@@ -6,6 +6,7 @@ import User, { IUser } from '../models/user.model'
 import { IRegisterReqBodyUser } from '~/types/user.types'
 import { generateAccessToken, generateRefreshToken } from '~/utils/token.utils'
 import Follower from '~/models/follow.model'
+import * as process from 'node:process'
 
 export const registerUser = async (payload: IRegisterReqBodyUser, res: Response) => {
   const { name, email, password, confirm_password, day_of_birth } = payload
@@ -27,7 +28,6 @@ export const registerUser = async (payload: IRegisterReqBodyUser, res: Response)
   const hashedPassword = await bcrypt.hash(password, salt)
 
   const newUser: IUser = await User.create({
-    _id: user_id,
     name,
     username: `user${user_id.toString()}`,
     email,
@@ -52,7 +52,6 @@ export const registerUser = async (payload: IRegisterReqBodyUser, res: Response)
 
   return {
     user: {
-      id: newUser._id,
       name: newUser.name,
       username: newUser.username,
       email: newUser.email,
@@ -89,12 +88,92 @@ export const loginUser = async (email: string, password: string, res: Response) 
 
   return {
     user: {
-      id: user._id,
       name: user.name,
       email: user.email
     },
     access_token: accessToken,
     refresh_token: refreshToken
+  }
+}
+
+export const getOauthGoogleToken = async (code: string) => {
+  try {
+    const params = new URLSearchParams({
+      client_id: process.env.GOOGLE_CLIENT_ID || '',
+      client_secret: process.env.GOOGLE_CLIENT_SECRET || '',
+      code,
+      redirect_uri: process.env.GOOGLE_REDIRECT_URI || '',
+      grant_type: 'authorization_code'
+    })
+
+    const response = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: params.toString()
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to fetch Google OAuth token')
+    }
+
+    return data
+  } catch (error) {
+    console.error('Error fetching Google OAuth token:', error)
+    throw new Error(error instanceof Error ? error.message : String(error))
+  }
+}
+
+export const getGoogleUserInfo = async (access_token: string, id_token: string) => {
+  try {
+    const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${access_token}`
+      }
+    })
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch user info: ${response.statusText}`)
+    }
+
+    const userInfo = await response.json()
+    return userInfo
+  } catch (error) {
+    console.error('Error fetching Google user info:', error)
+    throw new Error(error instanceof Error ? error.message : String(error))
+  }
+}
+
+export const oauth = async (code: string) => {
+  try {
+    const { access_token, id_token } = await getOauthGoogleToken(code)
+    const userInfo = await getGoogleUserInfo(access_token, id_token)
+
+    let user = await User.findOne({ email: userInfo.email })
+    if (!user) {
+      user = new User({
+        name: userInfo.name,
+        email: userInfo.email,
+        avatar: userInfo.picture,
+        refreshToken: ''
+      })
+      await user.save()
+    }
+
+    const accessToken = generateAccessToken(user)
+    const refreshToken = generateRefreshToken(user)
+
+    const hashedRefreshToken = await bcrypt.hash(refreshToken, 10)
+    user.refreshToken = hashedRefreshToken
+    await user.save()
+
+    return { user, access_token: accessToken, refresh_token: refreshToken }
+  } catch (error) {
+    throw new Error(error)
   }
 }
 

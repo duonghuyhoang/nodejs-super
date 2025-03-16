@@ -5,7 +5,8 @@ import {
   registerController,
   getProfileController,
   followController,
-  unFollowController
+  unFollowController,
+  oauthController
 } from '~/controllers/user.controllers'
 import { loginValidator, registerValidator } from '~/middlewares/user.middlewares'
 
@@ -22,5 +23,7 @@ userRouter.get('/:username', getProfileController)
 userRouter.post('/follow', followController)
 
 userRouter.delete('/follow/:user_id', unFollowController)
+
+userRouter.get('/oauth/google', oauthController)
 
 export default userRouter

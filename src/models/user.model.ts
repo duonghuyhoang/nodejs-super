@@ -1,7 +1,8 @@
-import mongoose, { Document, ObjectId, Schema } from 'mongoose'
+import mongoose, { Document, Schema } from 'mongoose'
+import { ObjectId } from 'mongodb'
 
 export interface IUser extends Document {
-  _id: ObjectId
+  _id: Types.ObjectId
   name: string
   email: string
   username: string
@@ -14,9 +15,6 @@ export interface IUser extends Document {
 
 const UserSchema = new Schema<IUser>(
   {
-    _id: {
-      type: String
-    },
     name: {
       type: String,
       required: [true, 'Name is required']
@@ -24,7 +22,10 @@ const UserSchema = new Schema<IUser>(
     username: {
       type: String,
       trim: true,
-      unique: true
+      unique: true,
+      default: function () {
+        return `user_${new ObjectId().toString()}`
+      }
     },
     email: {
       type: String,
@@ -33,13 +34,11 @@ const UserSchema = new Schema<IUser>(
       lowercase: true
     },
     password: {
-      type: String,
-      required: [true, 'Password is required']
+      type: String
     },
     refreshToken: { type: String },
     dayOfBirth: {
-      type: Date,
-      required: [true, 'Day of birth is required']
+      type: Date
     }
   },
   {
