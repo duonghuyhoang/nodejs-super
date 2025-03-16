@@ -1,12 +1,15 @@
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { Request, Response } from 'express'
+import { ObjectId } from 'mongodb'
 import User, { IUser } from '../models/user.model'
 import { IRegisterReqBodyUser } from '~/types/user.types'
 import { generateAccessToken, generateRefreshToken } from '~/utils/token.utils'
+import Follower from '~/models/follow.model'
 
 export const registerUser = async (payload: IRegisterReqBodyUser, res: Response) => {
   const { name, email, password, confirm_password, day_of_birth } = payload
+  const user_id = new ObjectId()
 
   if (!confirm_password) {
     throw new Error('Confirm password is required')
@@ -24,7 +27,9 @@ export const registerUser = async (payload: IRegisterReqBodyUser, res: Response)
   const hashedPassword = await bcrypt.hash(password, salt)
 
   const newUser: IUser = await User.create({
+    _id: user_id,
     name,
+    username: `user${user_id.toString()}`,
     email,
     password: hashedPassword,
     dayOfBirth: new Date(day_of_birth),
@@ -49,6 +54,7 @@ export const registerUser = async (payload: IRegisterReqBodyUser, res: Response)
     user: {
       id: newUser._id,
       name: newUser.name,
+      username: newUser.username,
       email: newUser.email,
       day_of_birth: newUser.dayOfBirth
     },
@@ -70,9 +76,8 @@ export const loginUser = async (email: string, password: string, res: Response) 
 
   const accessToken = generateAccessToken(user)
   const refreshToken = generateRefreshToken(user)
-  const hashedRefreshToken = await bcrypt.hash(refreshToken, 10)
 
-  user.refreshToken = hashedRefreshToken
+  user.refreshToken = refreshToken
   await user.save()
 
   res.cookie('refreshToken', refreshToken, {
@@ -106,8 +111,7 @@ export const refreshTokenService = async (req: Request, res: Response) => {
       return res.status(403).json({ message: 'Invalid refresh token' })
     }
 
-    const isValid = await bcrypt.compare(refreshToken, user.refreshToken)
-    if (!isValid) {
+    if (refreshToken !== user.refreshToken) {
       return res.status(403).json({ message: 'Invalid refresh token' })
     }
 
@@ -116,5 +120,53 @@ export const refreshTokenService = async (req: Request, res: Response) => {
     return res.json({ access_token: newAccessToken })
   } catch (error) {
     return res.status(403).json({ message: 'Invalid or expired refresh token' })
+  }
+}
+
+export const getProfile = async (username: string) => {
+  try {
+    const user = await User.findOne({ username }).select('-password -refreshToken -createdAt -updatedAt').lean()
+
+    if (!user) {
+      throw new Error('User not found!')
+    }
+
+    return user
+  } catch (error) {
+    throw new Error('Get profile error!')
+  }
+}
+
+export const follow = async (user_id: string, followed_user_id: string) => {
+  try {
+    await Follower.create({
+      user_id: new ObjectId(user_id),
+      followed_user_id: new ObjectId(followed_user_id)
+    })
+
+    return { message: 'Follow success!' }
+  } catch (error) {
+    throw new Error(error)
+  }
+}
+
+export const unFollow = async (user_id: string, followed_user_id: string) => {
+  try {
+    const existingFollow = await Follower.findOne({
+      user_id: new ObjectId(user_id),
+      followed_user_id: new ObjectId(followed_user_id)
+    })
+
+    if (!existingFollow) {
+      throw new Error('You are not following this user')
+    }
+
+    await Follower.deleteOne({
+      user_id: new ObjectId(user_id),
+      followed_user_id: new ObjectId(followed_user_id)
+    })
+    return { message: 'Unfollow success!' }
+  } catch (error) {
+    throw new Error(error)
   }
 }

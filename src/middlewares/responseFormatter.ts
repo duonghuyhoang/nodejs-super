@@ -3,7 +3,7 @@ import { Request, Response, NextFunction } from 'express'
 interface ApiResponse {
   code: number
   status: 'success' | 'error'
-  data?: any
+  data?: any[]
   message?: string
   meta?: any
 }
@@ -12,11 +12,17 @@ export const responseFormatter = (req: Request, res: Response, next: NextFunctio
   const originalJson = res.json.bind(res)
 
   res.json = (body: any) => {
+    const isError = res.statusCode >= 400
+
     const response: ApiResponse = {
       code: res.statusCode,
-      status: res.statusCode >= 400 ? 'error' : 'success',
-      ...(body.data ? { data: body.data } : { data: body }),
-      // ...(body.message ? { message: body.message } : {}),
+      status: isError ? 'error' : 'success',
+      ...(isError
+        ? { message: body.message || 'An error occurred' }
+        : {
+            data: Array.isArray(body?.data) ? body.data : body?.data ? [body.data] : [],
+            ...(body.message ? body.message : {})
+          }),
       ...(body.meta ? { meta: body.meta } : {})
     }
 
