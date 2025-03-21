@@ -5,8 +5,11 @@ import bodyParser from 'body-parser'
 import connectDB from './config/db'
 import { responseFormatter } from './middlewares/responseFormatter'
 import apiRoute from './routes/router'
+import { initFolder } from './utils/file'
 
 dotenv.config()
+
+initFolder()
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -21,6 +24,7 @@ app.use(
 app.use(express.json())
 app.use(cookieParser())
 app.use(responseFormatter)
+app.use(express.static('uploads'))
 app.use('/api', apiRoute)
 
 app.listen(PORT, () => {
