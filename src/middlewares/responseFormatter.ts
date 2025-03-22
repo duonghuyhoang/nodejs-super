@@ -21,7 +21,7 @@ export const responseFormatter = (req: Request, res: Response, next: NextFunctio
         ? { message: body.message || 'An error occurred' }
         : {
             data: Array.isArray(body?.data) ? body.data : body?.data ? [body.data] : [],
-            ...(body.message ? body.message : {})
+            message: body.message || ''
           }),
       ...(body.meta ? { meta: body.meta } : {})
     }

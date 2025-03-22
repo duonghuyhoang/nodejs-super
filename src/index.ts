@@ -2,6 +2,7 @@ import express from 'express'
 import dotenv from 'dotenv'
 import cookieParser from 'cookie-parser'
 import bodyParser from 'body-parser'
+import cors from 'cors'
 import connectDB from './config/db'
 import { responseFormatter } from './middlewares/responseFormatter'
 import apiRoute from './routes/router'
@@ -25,6 +26,11 @@ app.use(express.json())
 app.use(cookieParser())
 app.use(responseFormatter)
 app.use(express.static('uploads'))
+app.use(
+  cors({
+    origin: '*'
+  })
+)
 app.use('/api', apiRoute)
 
 app.listen(PORT, () => {

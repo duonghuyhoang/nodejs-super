@@ -13,15 +13,15 @@ export const registerUser = async (payload: IRegisterReqBodyUser, res: Response)
   const user_id = new ObjectId()
 
   if (!confirm_password) {
-    throw new Error('Confirm password is required')
+    return res.status(400).json({ message: 'Confirm password is required' })
   }
   if (password !== confirm_password) {
-    throw new Error('Passwords do not match')
+    return res.status(400).json({ message: 'Passwords do not match' })
   }
 
   const existingUser = await User.findOne({ email })
   if (existingUser) {
-    throw new Error('Email already exists')
+    return res.status(400).json({ message: 'Email already exists' })
   }
 
   const salt = await bcrypt.genSalt(10)
@@ -57,20 +57,19 @@ export const registerUser = async (payload: IRegisterReqBodyUser, res: Response)
       email: newUser.email,
       day_of_birth: newUser.dayOfBirth
     },
-    access_token: accessToken,
-    refresh_token: refreshToken
+    access_token: accessToken
   }
 }
 
 export const loginUser = async (email: string, password: string, res: Response) => {
   const user: IUser | null = await User.findOne({ email })
   if (!user) {
-    throw new Error('Invalid email or password')
+    return res.status(400).json({ message: 'Invalid email or password' })
   }
 
   const isMatch = await bcrypt.compare(password, user.password)
   if (!isMatch) {
-    throw new Error('Invalid email or password')
+    return res.status(400).json({ message: 'Invalid email or password' })
   }
 
   const accessToken = generateAccessToken(user)
@@ -91,8 +90,7 @@ export const loginUser = async (email: string, password: string, res: Response) 
       name: user.name,
       email: user.email
     },
-    access_token: accessToken,
-    refresh_token: refreshToken
+    access_token: accessToken
   }
 }
 

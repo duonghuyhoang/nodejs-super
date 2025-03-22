@@ -2,7 +2,7 @@ import mongoose, { Document, Schema } from 'mongoose'
 import { ObjectId } from 'mongodb'
 
 export interface IUser extends Document {
-  _id: Types.ObjectId
+  _id: ObjectId
   name: string
   email: string
   username: string
