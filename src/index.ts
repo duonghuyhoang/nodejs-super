@@ -7,6 +7,8 @@ import connectDB from './config/db'
 import { responseFormatter } from './middlewares/responseFormatter'
 import apiRoute from './routes/router'
 import { initFolder } from './utils/file'
+import { createServer } from 'http'
+import { Server } from 'socket.io'
 // import '~/utils/s3'
 
 dotenv.config()
@@ -34,6 +36,32 @@ app.use(
 )
 app.use('/api', apiRoute)
 
-app.listen(PORT, () => {
+const httpServer = createServer(app)
+
+const io = new Server(httpServer, {
+  cors: {
+    origin: '*'
+  }
+})
+
+const users: Record<string, string> = {}
+
+io.on('connection', (socket) => {
+  const userId = socket.handshake.auth?._id
+  if (userId) {
+    users[userId] = socket.id
+  }
+
+  socket.on('message', (data) => {
+    const { receiverId, content } = data
+
+    const receiverSocketId = users[receiverId]
+    if (receiverSocketId) {
+      socket.to(receiverSocketId).emit('message', { sender: userId, content })
+    }
+  })
+})
+
+httpServer.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}`)
 })
