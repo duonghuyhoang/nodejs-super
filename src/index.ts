@@ -7,6 +7,7 @@ import connectDB from './config/db'
 import { responseFormatter } from './middlewares/responseFormatter'
 import apiRoute from './routes/router'
 import { initFolder } from './utils/file'
+// import '~/utils/s3'
 
 dotenv.config()
 

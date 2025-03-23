@@ -4,7 +4,11 @@ import formidable from 'formidable'
 
 export const uploadSingleImageController = async (req: Request, res: Response) => {
   try {
-    const form = formidable({ uploadDir: path.resolve('uploads'), maxFiles: 1, keepExtensions: true })
+    const form = formidable({
+      uploadDir: path.join(__dirname, '..', '..', 'uploads', 'images'),
+      maxFiles: 1,
+      keepExtensions: true
+    })
 
     form.parse(req, (err, fields, files) => {
       if (err) {

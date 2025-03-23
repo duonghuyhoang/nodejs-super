@@ -84,3 +84,40 @@ export const getTweet = async (tweet_id: string) => {
     throw new Error('Get tweet error!')
   }
 }
+
+/**
+ * Search for tweets containing a specific keyword in their content with pagination
+ * @param {string} query - The keyword to search for in tweet content
+ * @param {number} page - The page number (default: 1)
+ * @param {number} limit - The number of tweets per page (default: 10)
+ * @returns {Promise<{ tweets: ITweet[], total: number, totalPages: number, currentPage: number }>} Paginated result
+ * @throws {Error} If there is an issue with the database query
+ */
+
+export const getTweetsByContent = async (query: string, page: number = 1, limit: number = 10) => {
+  try {
+    const skip = (page - 1) * limit
+
+    const [tweets, total] = await Promise.all([
+      Tweet.find({ content: { $regex: query, $options: 'i' } })
+        .populate('user_id', '-password -refreshToken -createdAt -updatedAt')
+        .populate('hashtags')
+        .populate('mentions')
+        .populate('medias')
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Tweet.countDocuments({ content: { $regex: query, $options: 'i' } })
+    ])
+
+    return {
+      tweets,
+      total,
+      totalPages: Math.ceil(total / limit),
+      currentPage: page
+    }
+  } catch (error) {
+    console.error(`Error searching tweets: ${error.message}`)
+    throw new Error('Failed to search tweets')
+  }
+}
