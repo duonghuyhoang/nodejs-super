@@ -9,6 +9,8 @@ import apiRoute from './routes/router'
 import { initFolder } from './utils/file'
 import { createServer } from 'http'
 import { Server } from 'socket.io'
+import helmet from 'helmet'
+import rateLimit from 'express-rate-limit'
 // import '~/utils/s3'
 
 dotenv.config()
@@ -18,13 +20,22 @@ initFolder()
 const app = express()
 const PORT = process.env.PORT || 3000
 
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 100,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false
+})
+
 connectDB()
 
+app.use(limiter)
 app.use(
   bodyParser.urlencoded({
     extended: true
   })
 )
+app.use(helmet())
 app.use(express.json())
 app.use(cookieParser())
 app.use(responseFormatter)

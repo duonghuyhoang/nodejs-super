@@ -6,6 +6,10 @@ import searchRouter from './search.routes'
 
 const apiRoute = Router()
 
+apiRoute.get('/', (req, res) => {
+  res.json({ message: 'Hello World' })
+})
+
 apiRoute.use('/user', userRouter)
 apiRoute.use('/media', mediaRouter)
 apiRoute.use('/tweet', tweetRouter)

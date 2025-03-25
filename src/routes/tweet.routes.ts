@@ -5,7 +5,7 @@ import { validateTweet } from '~/middlewares/tweet.middlewares'
 
 const tweetRouter = Router()
 
-tweetRouter.post('/create', authenticateUser, validateTweet, createTweetController)
-tweetRouter.get('/:tweet_id', getTweetController)
+// tweetRouter.post('/create', authenticateUser, validateTweet, createTweetController)
+// tweetRouter.get('/:tweet_id', getTweetController)
 
 export default tweetRouter

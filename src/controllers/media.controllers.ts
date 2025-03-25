@@ -2,7 +2,7 @@ import { Request, Response } from 'express'
 import path from 'path'
 import formidable from 'formidable'
 
-export const uploadSingleImageController = async (req: Request, res: Response) => {
+export const uploadSingleImageController = async (req: Request, res: Response): Promise<Response> => {
   try {
     const form = formidable({
       uploadDir: path.join(__dirname, '..', '..', 'uploads', 'images'),

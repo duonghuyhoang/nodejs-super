@@ -12,18 +12,18 @@ import { loginValidator, registerValidator } from '~/middlewares/user.middleware
 
 const userRouter = Router()
 
-userRouter.post('/register', registerValidator, registerController)
+// userRouter.post('/register', registerValidator, registerController)
 
-userRouter.post('/login', loginValidator, loginController)
+// userRouter.post('/login', loginValidator, loginController)
 
-userRouter.post('/refresh-token', refreshTokenController)
+// userRouter.post('/refresh-token', refreshTokenController)
 
-userRouter.get('/:username', getProfileController)
+// userRouter.get('/:username', getProfileController)
 
-userRouter.post('/follow', followController)
+// userRouter.post('/follow', followController)
 
-userRouter.delete('/follow/:user_id', unFollowController)
+// userRouter.delete('/follow/:user_id', unFollowController)
 
-userRouter.get('/oauth/google', oauthController)
+// userRouter.get('/oauth/google', oauthController)
 
 export default userRouter

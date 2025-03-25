@@ -13,7 +13,7 @@ import _ from 'lodash'
 
 export const registerController = async (req: Request<any, any, IRegisterReqBodyUser>, res: Response) => {
   try {
-    const { user, access_token } = await registerUser(req.body, res)
+    const { user, access_token } = (await registerUser(req.body, res)) as any
 
     return res.status(201).json({ data: { user, access_token } })
   } catch (error: any) {
@@ -26,7 +26,7 @@ export const loginController = async (req: Request, res: Response) => {
     const bodyPayload = _.pick(req.body, ['name', 'email', 'password'])
 
     const { email, password } = bodyPayload
-    const { user, access_token } = await loginUser(email, password, res)
+    const { user, access_token } = (await loginUser(email, password, res)) as any
 
     return res.status(200).json({ data: { user, access_token } })
   } catch (error: any) {
@@ -37,7 +37,7 @@ export const loginController = async (req: Request, res: Response) => {
 export const oauthController = async (req: Request, res: Response) => {
   try {
     const { code } = req.query
-    await oauth(code as string)
+    const { user, access_token } = await oauth(code as string)
     return res.status(200).json({ data: { user, access_token } })
   } catch (error: any) {
     return res.status(error.status || 400).json({ message: error.message })

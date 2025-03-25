@@ -33,8 +33,9 @@ export const processHashtags = async (hashtags: string[] = []): Promise<ObjectId
  * @returns Object containing the newly created tweet
  */
 export const createTweet = async (req: Request<any, any, TweetRequestBody>, res: Response) => {
+  const user = (req as any).user
   // Check user authentication
-  if (!req.user) {
+  if (!user) {
     throw new Error('User authentication required')
   }
 
@@ -48,7 +49,7 @@ export const createTweet = async (req: Request<any, any, TweetRequestBody>, res:
     const hashtagIds = await processHashtags(hashtags)
 
     const newTweet: ITweet = await Tweet.create({
-      user_id: new ObjectId(req.user.id),
+      user_id: new ObjectId(user.id),
       audience,
       content,
       mentions: mentions || [],
