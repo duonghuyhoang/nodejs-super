@@ -13,7 +13,8 @@ import helmet from 'helmet'
 import rateLimit from 'express-rate-limit'
 // import '~/utils/s3'
 
-dotenv.config()
+const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env'
+dotenv.config({ path: envFile })
 
 initFolder()
 
